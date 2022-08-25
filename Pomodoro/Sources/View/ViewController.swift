@@ -15,8 +15,8 @@ class ViewController: UIViewController {
     var isStarted = false
     var isWorkTime = false
     var timer: Timer!
-    var workTime = 10
-    var restTime = 5
+    var workTime = 25
+    var restTime = 10
     let shape = CAShapeLayer()
     let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .bold, scale: .default)
 
@@ -28,6 +28,7 @@ class ViewController: UIViewController {
         label.font = .boldSystemFont(ofSize: 60)
         label.textColor = .systemRed
         label.translatesAutoresizingMaskIntoConstraints = false
+        
         return label
     }()
     
@@ -46,7 +47,7 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
             super.viewDidLoad()
-            view.backgroundColor = .systemGray
+            view.backgroundColor = .darkGray
             setupHierarchy()
             setupLayout()
     }
@@ -56,9 +57,6 @@ class ViewController: UIViewController {
     private func setupHierarchy() {
         view.addSubview(label)
         view.addSubview(playPauseButton)
-//        view.addSubview(stackView)
-//        stackView.addArrangedSubview(label)
-//        stackView.addArrangedSubview(playPauseButton)
         createCircularPath()
     }
     
@@ -72,45 +70,30 @@ class ViewController: UIViewController {
             make.centerX.equalTo(view)
             make.centerY.equalTo(view).offset(50)
         }
-        
-//        stackView.snp.makeConstraints { make in
-//                    make.center.equalTo(view)
-//                }
     }
 
     // MARK: - Actions
 
     @objc private func playPauseButtonPressed() {
-        if !isStarted && shape.strokeEnd == 0 {
+        if !isStarted && shape.timeOffset <= 0 {
             isStarted = true
             basicAnimation()
-            timer = Timer.scheduledTimer(timeInterval: 1,
-                                         target: self,
-                                         selector: #selector(timerAction),
-                                         userInfo: nil,
-                                         repeats: true)
+            createTimer()
             let image = UIImage(systemName: "pause", withConfiguration: config)
             playPauseButton.setImage(image, for: .normal)
         } else if !isStarted {
             isStarted = true
-            timer = Timer.scheduledTimer(timeInterval: 1,
-                                         target: self,
-                                         selector: #selector(timerAction),
-                                         userInfo: nil,
-                                         repeats: true)
-            shape.speed = 1
+            resumeAnimation()
+            createTimer()
             let image = UIImage(systemName: "pause", withConfiguration: config)
             playPauseButton.setImage(image, for: .normal)
         } else {
+            pauseAnimation()
             timer.invalidate()
-            shape.strokeEnd = CGFloat(workTime)
-            shape.speed = 0
-        
             let image = UIImage(systemName: "play", withConfiguration: config)
             playPauseButton.setImage(image, for: .normal)
             isStarted = false
         }
-        
     }
     
     @objc private func timerAction() {
@@ -122,6 +105,7 @@ class ViewController: UIViewController {
             playPauseButton.tintColor = .systemGreen
             label.textColor = .systemGreen
             shape.strokeColor = UIColor.systemGreen.cgColor
+            shape.shadowColor = UIColor.systemGreen.cgColor
             shape.removeAllAnimations()
             timer.invalidate()
             let image = UIImage(systemName: "play", withConfiguration: config)
@@ -131,6 +115,7 @@ class ViewController: UIViewController {
             isWorkTime = false
             timer.invalidate()
         }
+        
         if workTime < 10 {
             label.text = "00:0\(workTime)"
         } else {
@@ -138,11 +123,31 @@ class ViewController: UIViewController {
         }
     }
     
+    private func createTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
+        }
+    
+    private func pauseAnimation() {
+            let pausedTime = shape.convertTime(CACurrentMediaTime(), from: nil)
+            shape.speed = 0
+            shape.timeOffset = pausedTime
+        }
+
+    private func resumeAnimation() {
+        let pausedTime = shape.timeOffset
+        shape.speed = 1
+        shape.timeOffset = 0
+        shape.beginTime = 0
+        let timeSincePause = shape.convertTime(CACurrentMediaTime(), from: nil) - pausedTime
+        shape.beginTime = timeSincePause
+    }
     
     // MARK: - Animation
     
     func createCircularPath() {
-        let circlePath = UIBezierPath(arcCenter: view.center, radius: 150, startAngle: -(.pi / 2), endAngle: .pi * 2, clockwise: true)
+        let startPoint = CGFloat(-Double.pi / 2)
+        let endPoint = CGFloat(3 * Double.pi / 2)
+        let circlePath = UIBezierPath(arcCenter: view.center, radius: 150, startAngle: startPoint, endAngle: endPoint, clockwise: true)
         
         let trackShape = CAShapeLayer()
         trackShape.path = circlePath.cgPath
@@ -157,6 +162,13 @@ class ViewController: UIViewController {
         shape.fillColor = UIColor.clear.cgColor
         shape.lineCap = .round
         shape.strokeEnd = 0
+        
+        shape.shadowColor = UIColor.systemRed.cgColor
+        shape.shadowOpacity = 1
+        shape.shadowRadius = 10
+        shape.shouldRasterize = true
+        shape.rasterizationScale = UIScreen.main.scale
+        shape.shadowOffset = .zero
         view.layer.addSublayer(shape)
     }
     
@@ -165,10 +177,8 @@ class ViewController: UIViewController {
         basicAnimation.duration = CFTimeInterval(workTime)
         basicAnimation.fromValue = 0
         basicAnimation.toValue = 1
-        basicAnimation.fillMode = .forwards
+        basicAnimation.fillMode = CAMediaTimingFillMode.forwards
         basicAnimation.isRemovedOnCompletion = false
         shape.add(basicAnimation, forKey: "animation")
     }
-    
-    
 }
