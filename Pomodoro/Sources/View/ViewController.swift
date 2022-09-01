@@ -46,10 +46,10 @@ class ViewController: UIViewController {
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
-            super.viewDidLoad()
-            view.backgroundColor = .darkGray
-            setupHierarchy()
-            setupLayout()
+        super.viewDidLoad()
+        view.backgroundColor = .darkGray
+        setupHierarchy()
+        setupLayout()
     }
     
     // MARK: - Setup
@@ -135,9 +135,9 @@ class ViewController: UIViewController {
         }
     
     private func pauseAnimation() {
-            let pausedTime = shape.convertTime(CACurrentMediaTime(), from: nil)
-            shape.speed = 0
-            shape.timeOffset = pausedTime
+        let pausedTime = shape.convertTime(CACurrentMediaTime(), from: nil)
+        shape.speed = 0
+        shape.timeOffset = pausedTime
         }
 
     private func resumeAnimation() {
