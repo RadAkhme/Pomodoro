@@ -15,8 +15,8 @@ class ViewController: UIViewController {
     var isStarted = false
     var isWorkTime = false
     var timer: Timer!
-    var workTime = 25
-    var restTime = 10
+    var workTime: Double = 25
+    var restTime: Double = 10
     let shape = CAShapeLayer()
     let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .bold, scale: .default)
 
@@ -24,7 +24,7 @@ class ViewController: UIViewController {
         
     private lazy var label: UILabel = {
         let label = UILabel()
-        label.text = "00:\(workTime)"
+        label.text = "00:\(Int(workTime))"
         label.font = .boldSystemFont(ofSize: 60)
         label.textColor = .systemRed
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -98,7 +98,7 @@ class ViewController: UIViewController {
     
     @objc private func timerAction() {
         if workTime > 0 {
-            workTime -= 1
+            workTime -= 0.01
         } else if !isWorkTime {
             workTime = restTime
             isWorkTime = true
@@ -113,18 +113,25 @@ class ViewController: UIViewController {
             isStarted = false
         } else if isWorkTime {
             isWorkTime = false
+            workTime = 25
+            playPauseButton.tintColor = .systemRed
+            label.textColor = .systemRed
+            shape.strokeColor = UIColor.systemRed.cgColor
+            shape.shadowColor = UIColor.systemRed.cgColor
+            let image = UIImage(systemName: "play", withConfiguration: config)
+            playPauseButton.setImage(image, for: .normal)
             timer.invalidate()
         }
         
         if workTime < 10 {
-            label.text = "00:0\(workTime)"
+            label.text = "00:0\(Int(workTime))"
         } else {
-            label.text = "00:\(workTime)"
+            label.text = "00:\(Int(workTime))"
         }
     }
     
     private func createTimer() {
-        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(timerAction), userInfo: nil, repeats: true)
         }
     
     private func pauseAnimation() {
@@ -151,7 +158,7 @@ class ViewController: UIViewController {
         
         let trackShape = CAShapeLayer()
         trackShape.path = circlePath.cgPath
-        trackShape.lineWidth = 20
+        trackShape.lineWidth = 15
         trackShape.strokeColor = UIColor.black.cgColor
         trackShape.fillColor = UIColor.clear.cgColor
         view.layer.addSublayer(trackShape)
